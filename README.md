@@ -3,6 +3,8 @@
 
 #Install Required Dependencies
 
+First instal CUDA Toolkit
+
 <code> pip3 install -r requirements.txt </code>
 
 
