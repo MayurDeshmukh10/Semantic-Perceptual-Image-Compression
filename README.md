@@ -25,12 +25,11 @@ Note - map file is generated in output folder
 
 usage - 
 
-<code>
-import compression
+<code>import compression</code>
 
-compression.compression_engine("image_to_compress")
+<code>compression.compression_engine("image_to_compress")</code>
 
-</code>
+
 
 Compressed image will be saved in Output folder
 
