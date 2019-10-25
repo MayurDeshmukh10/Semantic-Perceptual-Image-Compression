@@ -2,6 +2,18 @@ import skimage.io
 import skimage.transform
 import numpy as np
 from PIL import Image
+from io import BytesIO
+
+
+#performs in-memory jpeg compression and returns compressed size of image
+def in_memory_jpeg_compression(img):                    
+
+    img_file = BytesIO()
+    img.save(img_file, format='JPEG',quality=50)
+    image_file_size = img_file.tell()
+
+    return image_file_size
+
 
 def chunker(seq, size):
     # http://stackoverflow.com/a/25701576/1189865
@@ -42,6 +54,12 @@ def array2PIL(arr):
 
     return Image.frombuffer(mode, (shape[1], shape[0]), arr.tostring(), 'raw', mode, 0, 1)
 
+def myarray2PIL(arr, size):
+    mode = 'RGBA'
+    arr = arr.reshape(arr.shape[0]*arr.shape[1], arr.shape[2])
+    if len(arr[0]) == 3:
+        arr = numpy.c_[arr, 255*numpy.ones((len(arr),1), numpy.uint8)]
+    return Image.frombuffer(mode, size, arr.tostring(), 'raw', mode, 0, 1)
 
 def normalize(x):
     min = np.min(x)
