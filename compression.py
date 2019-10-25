@@ -1,6 +1,7 @@
 #from __future__ import division
 
 import os, sys
+#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -13,7 +14,7 @@ import os
 #import pkg_resources
 #pkg_resources.require("numpy==1.15.4")
 import numpy as np
-from util import load_image, array2PIL
+from util import load_image, array2PIL, in_memory_jpeg_compression
 import argparse
 from scipy.stats import percentileofscore
 
@@ -28,7 +29,7 @@ tf.disable_v2_behavior()
 image = 'Lion.jpg'
 map = 'msroi_map.jpg'
 find_best = 1
-threshold_pct = 20
+threshold_pct = 1
 use_convert = 0
 jpeg_compression = 50
 model = 3
@@ -39,9 +40,11 @@ output_directory = 'output'
 modifier = ""
 
 def make_quality_compression(original,sal,imgg):
-    if print_metrics:
+    #sal.save("msroi.jpg")
+    #skimage.io.imsave( 'msroi_map.jpg', sal )
+    '''if print_metrics:
         print(image,)
-    # if the size of the map is not the same original image, then blow it
+    #if the size of the map is not the same original image, then blow it'''
     if original.size != sal.size:
         sal = sal.resize(original.size)
 
@@ -65,17 +68,22 @@ def make_quality_compression(original,sal,imgg):
     shape = k.shape
     k.flags.writeable = True
     mx, mn = np.max(sal_arr), np.mean(sal_arr)
+    #mx, mn = np.max(sal), np.mean(sal)
     sal_flatten = sal_arr.flatten()
+    #sal_flatten = sal.flatten()
 
     #q_2,q_3,q_5,q_6,q_9 = map(lambda z: np.percentile(sal_arr, z), [20,30,50,60,90])
+    #q_2,q_3,q_5,q_6,q_9 = map(lambda z: np.percentile(sal, z), [20,30,50,60,90])
 
     q_a = [np.percentile(sal_arr, j) for j in quality_steps]
+    #q_a = [np.percentile(sal, j) for j in quality_steps]
     low, med, high = 1, 5, 9
 
     for i in range(shape[0]):
         for j in range(shape[1]):
             for l in range(shape[2]):
                 ss = sal_arr[i,j]
+                #ss = sal[i,j]
 
                 if model == 1:
                     # model -1
@@ -132,9 +140,12 @@ def make_quality_compression(original,sal,imgg):
 
 
     #original_size = os.path.getsize(compressed)
+    #print("original size : ",original_size)
     #os.system('convert ' + imgg + " " + output_directory + '/temp.png')
     #uncompressed_size = os.path.getsize(output_directory + '/temp.png')
     #os.remove(output_directory + '/temp.png')
+
+    original_size = in_memory_jpeg_compression(original)
 
     out_img = array2PIL(k)
 
@@ -144,14 +155,14 @@ def make_quality_compression(original,sal,imgg):
             out_img = out_img.convert("RGB")
             out_img.save(out_name, quality=qual)
             current_size = os.path.getsize(out_name)
-            '''if current_size<= original_size*(1 + threshold_pct/100.0):
-                if print_metrics:
-                    print(model, uncompressed_size, original_size, current_size, jpeg_compression, qual,' | ',)
-                break'''
-        '''else:
-            if print_metrics:
-                print(model, uncompressed_size, original_size, current_size, jpeg_compression, qual,' | ',)
-            pass'''
+            if current_size<= original_size*(1 + threshold_pct/100.0):
+                '''if print_metrics:
+                    print(model, uncompressed_size, original_size, current_size, jpeg_compression, qual,' | ',)'''
+                break
+        else:
+            '''if print_metrics:
+                print(model, uncompressed_size, original_size, current_size, jpeg_compression, qual,' | ',)'''
+            pass
 
     '''else:
         final_quality = [100, 85, 65, 45]
@@ -218,7 +229,8 @@ def compression_engine(img):
     if not os.path.exists('output'):
         os.makedirs('output')
     plt.savefig('output/overlayed_heatmap.png')
-    skimage.io.imsave( 'msroi_map.jpg', roi_map )
+    #skimage.io.imsave( 'msroi_map.jpg', roi_map )
+    print("MSROI TYPE : ",type(roi_map))
 
 
 
@@ -235,6 +247,10 @@ def compression_engine(img):
     if single:
         original = Image.open(img)
         sal = Image.open('msroi_map.jpg')
+        #sal = Image.fromarray((roi_map * 255).astype('uint8'), mode='L')
+        #sal = sal.convert("L")
+        #print("shape : ",roi_map.shape)
+        #sal = myarray2PIL(roi_map)
         make_quality_compression(original,sal,img)
 
         '''if print_metrics:
