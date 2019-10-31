@@ -1,5 +1,6 @@
 
-Test 	Date		Images	  		Total Time Required	Time per Frame	GPU Memory Used	 RAM Used    Compression ratio
----------------------------------------------------------------------------------------------------------------------------------------	
-1	24/10/2019	video.mp4(53 frames)	23 min 35 sec		26.89 sec	3.684 GB	 4 GB	     79 %			
+Test 	Date		Images	  		Total Time Required	Time per Frame	GPU Memory Used	 RAM Used    Compression ratio	Comments
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------	
+1	24/10/2019	video.mp4(53 frames)	23 min 35 sec		26.89 sec	3.684 GB	 4 GB	     79 %		optimize for memory	
+2	31/10/2019	video.mp4(53 frames)	2 min 20 sec		2.64 sec	3.684 GB	 4 GB	     79%		used parallel processing
 
