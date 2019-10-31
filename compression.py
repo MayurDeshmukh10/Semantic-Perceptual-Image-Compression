@@ -1,5 +1,13 @@
 #from __future__ import division
+from concurrent import futures
 
+from joblib import Parallel, delayed
+import multiprocessing
+
+from numba import njit, prange
+
+
+#from six.moves import xrange
 import os, sys
 #os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import matplotlib
@@ -10,6 +18,7 @@ plt.style.use('ggplot')
 from util import load_single_image, normalize
 import sys
 from PIL import Image
+from io import BytesIO
 import os
 #import pkg_resources
 #pkg_resources.require("numpy==1.15.4")
@@ -29,7 +38,7 @@ tf.disable_v2_behavior()
 image = 'Lion.jpg'
 map = 'msroi_map.jpg'
 find_best = 1
-threshold_pct = 1
+threshold_pct = 20
 use_convert = 0
 jpeg_compression = 50
 model = 3
@@ -39,7 +48,36 @@ print_metrics = 0
 output_directory = 'output'
 modifier = ""
 
-def make_quality_compression(original,sal,imgg):
+#shape = []
+#img_qualities = []
+
+
+
+@njit(parallel=True)
+def processcal(shape1,shape2,shape3,sal_arr,q_a,low,high,img_qualities,k):
+    for i in prange(shape1):
+        for j in prange(shape2):
+            for l in prange(shape3):
+                ss = sal_arr[i,j]
+
+                for index, q_i in enumerate(q_a):
+                    if ss < q_i:
+                        qq = index + 1
+                        break
+
+                
+
+                if qq < low : qq = low
+                if qq > high: qq = high
+                k[i,j,l] = img_qualities[qq][i,j,l]
+
+    return k
+        
+
+
+   
+
+def make_quality_compression(original,sal,imgg,original1):
     #sal.save("msroi.jpg")
     #skimage.io.imsave( 'msroi_map.jpg', sal )
     '''if print_metrics:
@@ -64,6 +102,25 @@ def make_quality_compression(original,sal,imgg):
         os.remove(name)
     os.rmdir('temp_xxx_yyy')
 
+    print(img_qualities)
+
+    '''#os.makedirs('temp_xxx_yyy')
+    for q in quality_steps:
+        #name = 'temp_xxx_yyy/temp_' + str(q) + '.jpg'
+        if use_convert:
+            os.system('convert -colorspace sRGB -filter Lanczos -interlace Plane -type truecolor -quality ' + str(q) + ' ' + image + ' ' + name)
+        else:
+            #original.save(name, quality=q)
+            img_file = BytesIO()
+            original.save(img_file, format='JPEG',quality=q)
+        img_qualities.append(np.asarray(original))
+        #del img_file
+        #os.remove(name)
+    #os.rmdir('temp_xxx_yyy')'''
+
+    #print(img_qualities)
+
+    #k = np.copy(img_qualities)
     k = img_qualities[-1][:] # make sure it is a copy and not reference
     shape = k.shape
     k.flags.writeable = True
@@ -79,7 +136,9 @@ def make_quality_compression(original,sal,imgg):
     #q_a = [np.percentile(sal, j) for j in quality_steps]
     low, med, high = 1, 5, 9
 
-    for i in range(shape[0]):
+
+
+    '''for i in range(shape[0]):
         for j in range(shape[1]):
             for l in range(shape[2]):
                 ss = sal_arr[i,j]
@@ -131,7 +190,33 @@ def make_quality_compression(original,sal,imgg):
 
                 if qq < low : qq = low
                 if qq > high: qq = high
-                k[i,j,l] = img_qualities[qq][i,j,l]
+                k[i,j,l] = img_qualities[qq][i,j,l]'''
+
+
+    k = processcal(shape[0],shape[1],shape[2],sal_arr,q_a,low,high,img_qualities,k)
+
+    
+    '''for i in prange(shape[0]):
+        for j in prange(shape[1]):
+            for l in prange(shape[2]):
+                ss = sal_arr[i,j]
+
+                for index, q_i in enumerate(q_a):
+                    if ss < q_i:
+                        qq = index + 1
+                        break
+
+                
+
+                if qq < low : qq = low
+                if qq > high: qq = high
+                k[i,j,l] = img_qualities[qq][i,j,l]'''
+
+
+    #num_cores = multiprocessing.cpu_count()
+
+    #k[i,j,l] = Parallel(n_jobs=num_cores)(delayed(processcal)(i) for i in shape[0])
+    
 
 
     # save the original file at the given quality level
@@ -146,6 +231,9 @@ def make_quality_compression(original,sal,imgg):
     #os.remove(output_directory + '/temp.png')
 
     original_size = in_memory_jpeg_compression(original)
+
+
+    print("Original_size",original_size)
 
     out_img = array2PIL(k)
 
@@ -251,7 +339,7 @@ def compression_engine(img):
         #sal = sal.convert("L")
         #print("shape : ",roi_map.shape)
         #sal = myarray2PIL(roi_map)
-        make_quality_compression(original,sal,img)
+        make_quality_compression(original,sal,img,original)
 
         '''if print_metrics:
             get_metrics(image,a,b, original.size)'''
