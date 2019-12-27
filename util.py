@@ -6,10 +6,16 @@ from io import BytesIO
 
 
 #performs in-memory jpeg compression and returns compressed size of image
-def in_memory_jpeg_compression(img):                    
+def in_memory_jpeg_compression(img,qual):                    
 
     img_file = BytesIO()
-    img.save(img_file, format='JPEG',quality=50)
+    img.save(img_file, format='JPEG',quality=qual)
+
+    #print("IN MEMORY COMPRESSION FORMAT : ",type(img))
+
+    arr = np.asarray(img)
+
+    #print("IN MEMORY COMPRESSION ARRAY : ",arr)
     image_file_size = img_file.tell()
 
     return image_file_size
@@ -22,6 +28,8 @@ def chunker(seq, size):
 def load_image(path):
     try:
         img = skimage.io.imread( path ).astype(np.float)
+        
+        
         img /= 255.0
         X = img.shape[0]
         Y = img.shape[1]
