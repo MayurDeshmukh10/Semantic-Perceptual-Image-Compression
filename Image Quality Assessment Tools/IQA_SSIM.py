@@ -22,8 +22,12 @@ def measure_psnr(original_image,compressed):
 
     return 20 * math.log10(PIXEL_MAX/math.sqrt(mse))'''
 
+    grayA = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
+    grayB = cv2.cvtColor(compressed, cv2.COLOR_BGR2GRAY)
 
-    score = measure.compare_ssim(original_image,compressed,multichannel=True)
+
+
+    score = measure.compare_ssim(grayA,grayB)
 
     #score = ssim(original_image,compressed)
 
