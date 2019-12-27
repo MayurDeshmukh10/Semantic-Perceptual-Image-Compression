@@ -1,4 +1,5 @@
-#from __future__ import division
+
+
 from concurrent import futures
 
 from joblib import Parallel, delayed
@@ -6,14 +7,15 @@ import multiprocessing
 
 from numba import njit, prange
 
-
-#from six.moves import xrange
-import os, sys
-#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 plt.style.use('ggplot')
+
+
+#from six.moves import xrange
+import os, sys
+#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 from util import load_single_image, normalize
 import sys
@@ -35,23 +37,13 @@ import skimage.io
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
 
-image = 'Lion.jpg'
+
 map = 'msroi_map.jpg'
 find_best = 1
-threshold_pct = 20
-use_convert = 0
+threshold_pct = 10
 jpeg_compression = 50
-model = 3
-single = 1
-dataset = "kodak"
-print_metrics = 0
 output_directory = 'output'
-modifier = ""
-
-#shape = []
-#img_qualities = []
-
-
+use_convert = 0
 
 @njit(parallel=True)
 def processcal(shape1,shape2,shape3,sal_arr,q_a,low,high,img_qualities,k):
@@ -78,10 +70,7 @@ def processcal(shape1,shape2,shape3,sal_arr,q_a,low,high,img_qualities,k):
    
 
 def make_quality_compression(original,sal,imgg,original1):
-    #sal.save("msroi.jpg")
-    #skimage.io.imsave( 'msroi_map.jpg', sal )
-    '''if print_metrics:
-        print(image,)
+    
     #if the size of the map is not the same original image, then blow it'''
     if original.size != sal.size:
         sal = sal.resize(original.size)
@@ -102,170 +91,43 @@ def make_quality_compression(original,sal,imgg,original1):
         os.remove(name)
     os.rmdir('temp_xxx_yyy')
 
-    print(img_qualities)
-
-    '''#os.makedirs('temp_xxx_yyy')
-    for q in quality_steps:
-        #name = 'temp_xxx_yyy/temp_' + str(q) + '.jpg'
-        if use_convert:
-            os.system('convert -colorspace sRGB -filter Lanczos -interlace Plane -type truecolor -quality ' + str(q) + ' ' + image + ' ' + name)
-        else:
-            #original.save(name, quality=q)
-            img_file = BytesIO()
-            original.save(img_file, format='JPEG',quality=q)
-        img_qualities.append(np.asarray(original))
-        #del img_file
-        #os.remove(name)
-    #os.rmdir('temp_xxx_yyy')'''
-
-    #print(img_qualities)
-
-    #k = np.copy(img_qualities)
     k = img_qualities[-1][:] # make sure it is a copy and not reference
     shape = k.shape
+
+    #print("SHAPE TUPLE : ",shape)
     k.flags.writeable = True
     mx, mn = np.max(sal_arr), np.mean(sal_arr)
-    #mx, mn = np.max(sal), np.mean(sal)
-    sal_flatten = sal_arr.flatten()
-    #sal_flatten = sal.flatten()
 
-    #q_2,q_3,q_5,q_6,q_9 = map(lambda z: np.percentile(sal_arr, z), [20,30,50,60,90])
-    #q_2,q_3,q_5,q_6,q_9 = map(lambda z: np.percentile(sal, z), [20,30,50,60,90])
+    sal_flatten = sal_arr.flatten()
 
     q_a = [np.percentile(sal_arr, j) for j in quality_steps]
-    #q_a = [np.percentile(sal, j) for j in quality_steps]
     low, med, high = 1, 5, 9
 
 
 
-    '''for i in range(shape[0]):
-        for j in range(shape[1]):
-            for l in range(shape[2]):
-                ss = sal_arr[i,j]
-                #ss = sal[i,j]
-
-                if model == 1:
-                    # model -1
-                    # hard-coded model
-                    if ss > mn: qq = 9
-                    else: qq = 6
-
-                elif model == 2:
-                    # model -2
-                    # linearly scaled technique
-                    qq = (ss * 10 // mx) -1  + 3
-
-                elif model == 3:
-                    # model -3
-                    # percentile based technique
-                    # qq = int(percentileofscore(sal_flatten, ss)/10)
-                    for index, q_i in enumerate(q_a):
-                        if ss < q_i:
-                            qq = index + 1
-                            break
-
-                elif model == 4:
-                    # model -4
-                    # discrete percentile based technique
-                    # if   ss < q_2: qq = 4
-                    if ss < q_2: qq = 4
-                    elif ss < q_6: qq = 6
-                    elif ss < q_9: qq = 8
-                    else: qq = 9
-
-                elif model == 5:
-                    # model -5
-                    # two way percentile
-                    if ss <  q_5: qq = 2
-                    else: qq = 8
-
-                elif model == 6:
-                    # model -6
-                    # two way percentile - higher coverage
-                    if ss <  q_5: qq = 7
-                    else: qq = 9
-
-                else:
-                    raise Exception("unknown model number")
-
-                if qq < low : qq = low
-                if qq > high: qq = high
-                k[i,j,l] = img_qualities[qq][i,j,l]'''
-
-
     k = processcal(shape[0],shape[1],shape[2],sal_arr,q_a,low,high,img_qualities,k)
 
-    
-    '''for i in prange(shape[0]):
-        for j in prange(shape[1]):
-            for l in prange(shape[2]):
-                ss = sal_arr[i,j]
-
-                for index, q_i in enumerate(q_a):
-                    if ss < q_i:
-                        qq = index + 1
-                        break
-
-                
-
-                if qq < low : qq = low
-                if qq > high: qq = high
-                k[i,j,l] = img_qualities[qq][i,j,l]'''
+    original_size = in_memory_jpeg_compression(original,50)
 
 
-    #num_cores = multiprocessing.cpu_count()
-
-    #k[i,j,l] = Parallel(n_jobs=num_cores)(delayed(processcal)(i) for i in shape[0])
-    
-
-
-    # save the original file at the given quality level
-    #compressed = output_directory + '/' + '_original_' + imgg.split('/')[-1] + '_' + str(jpeg_compression) + '.jpg'
-    #original.save(compressed, quality=jpeg_compression)
-
-
-    #original_size = os.path.getsize(compressed)
-    #print("original size : ",original_size)
-    #os.system('convert ' + imgg + " " + output_directory + '/temp.png')
-    #uncompressed_size = os.path.getsize(output_directory + '/temp.png')
-    #os.remove(output_directory + '/temp.png')
-
-    original_size = in_memory_jpeg_compression(original)
-
-
-    print("Original_size",original_size)
+    #print("Original_size",original_size)
 
     out_img = array2PIL(k)
 
+    qua = 0
     if find_best:
         out_name = output_directory + '/' + '_compressed_' + imgg.split('/')[-1] + '_' + '.jpg'
         for qual in range(90,20,-1):
             out_img = out_img.convert("RGB")
-            out_img.save(out_name, quality=qual)
-            current_size = os.path.getsize(out_name)
+            #out_img.save(out_name, quality=qual)
+            current_size = in_memory_jpeg_compression(out_img,qual)
             if current_size<= original_size*(1 + threshold_pct/100.0):
-                '''if print_metrics:
-                    print(model, uncompressed_size, original_size, current_size, jpeg_compression, qual,' | ',)'''
+                qua = qual
                 break
         else:
-            '''if print_metrics:
-                print(model, uncompressed_size, original_size, current_size, jpeg_compression, qual,' | ',)'''
             pass
 
-    '''else:
-        final_quality = [100, 85, 65, 45]
-        for fq in final_quality:
-            out_name = output_directory + '/' + modifier + imgg.split('/')[-1] + '_' + str(fq) + '.jpg'
-            out_img.save(out_name, quality=fq)
-    return compressed, out_name'''
-
-
-    
-    '''final_quality = [100, 85, 65, 45]
-    for fq in final_quality:
-        out_name = output_directory + '/' + modifier + imgg.split('/')[-1] + '_' + str(fq) + '.jpg'
-        out_img.save(out_name, quality=fq)
-    return compressed, out_name'''
+        out_img.save(out_name, quality=qua)
 
 
 
@@ -273,6 +135,9 @@ def make_quality_compression(original,sal,imgg,original1):
 def compression_engine(img):
 
     image = load_single_image(img)
+
+    #print("INPUT IMAGE ARRAY ",image.shape)
+
     hyper = HyperParams(verbose=False)
     images_tf = tf.placeholder(tf.float32, [None, hyper.image_h, hyper.image_w, hyper.image_c], name="images")
     class_tf  = tf.placeholder(tf.int64, [None], name='class')
@@ -317,7 +182,7 @@ def compression_engine(img):
     if not os.path.exists('output'):
         os.makedirs('output')
     plt.savefig('output/overlayed_heatmap.png')
-    #skimage.io.imsave( 'msroi_map.jpg', roi_map )
+    skimage.io.imsave( 'msroi_map.jpg', roi_map )
     print("MSROI TYPE : ",type(roi_map))
 
 
@@ -329,39 +194,11 @@ def compression_engine(img):
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
 
-    '''if print_metrics:
-        from get_metrics import get_metrics'''
 
-    if single:
-        original = Image.open(img)
-        sal = Image.open('msroi_map.jpg')
-        #sal = Image.fromarray((roi_map * 255).astype('uint8'), mode='L')
-        #sal = sal.convert("L")
-        #print("shape : ",roi_map.shape)
-        #sal = myarray2PIL(roi_map)
-        make_quality_compression(original,sal,img,original)
+    original = Image.open(img)
 
-        '''if print_metrics:
-            get_metrics(image,a,b, original.size)'''
+    #print("ORIGINAL : ",original)
+    sal = Image.open('msroi_map.jpg')
 
-    '''else:
+    make_quality_compression(original,sal,img,original)
 
-        if dataset == 'kodak':
-            image_path = 'images_directory/kodak/*.png'
-        elif dataset == 'large':
-            image_path = 'images_directory/output_large/ori_*.png'
-        else:
-            assert Exception("Wrong dataset choosen")
-
-        for image_file in glob(image_path):
-            if dataset == 'large':
-                map_file = 'images_directory/output_large/map' + image_file.split('/')[-1][3:-4]
-            elif dataset == 'kodak':
-                map_file = 'images_directory/output_kodak/map_' + image_file.split('/')[-1] + '.jpg'
-            image = image_file
-            map   = map_file
-            original = Image.open(image)
-            sal = Image.open(map)
-            a,b = make_quality_compression(original,sal,img)
-            if print_metrics:
-                get_metrics(image,a,b, original.size)'''
