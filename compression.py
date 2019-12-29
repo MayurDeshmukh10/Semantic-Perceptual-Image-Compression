@@ -69,7 +69,7 @@ def processcal(shape1,shape2,shape3,sal_arr,q_a,low,high,img_qualities,k):
 
    
 
-def make_quality_compression(original,sal,imgg,original1):
+def make_quality_compression(original,sal,imgg,original1,image_metadata,image_type):
     
     #if the size of the map is not the same original image, then blow it'''
     if original.size != sal.size:
@@ -127,12 +127,19 @@ def make_quality_compression(original,sal,imgg,original1):
         else:
             pass
 
-        out_img.save(out_name, quality=qua)
+        if image_type == "tiff":
+            out_img.save(out_name, quality=qua)
+
+        else:
+            out_img.save(out_name, quality=qua,exif=image_metadata)
+
+
+        
 
 
 
 
-def compression_engine(img):
+def compression_engine(img,image_metadata,image_type):
 
     image = load_single_image(img)
 
@@ -200,5 +207,5 @@ def compression_engine(img):
     #print("ORIGINAL : ",original)
     sal = Image.open('msroi_map.jpg')
 
-    make_quality_compression(original,sal,img,original)
+    make_quality_compression(original,sal,img,original,image_metadata,image_type)
 
