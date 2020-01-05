@@ -31,12 +31,15 @@ if extension == "tiff" or extension == "tif":
 elif extension == "jpg" or extension == "jpeg" or extension == "png":
     start = datetime.datetime.now()
     im = Image.open(filename)
-    exif_dict = piexif.load(im.info["exif"])
-    w, h = im.size
-    exif_dict["0th"][piexif.ImageIFD.XResolution] = (w, 1)
-    exif_dict["0th"][piexif.ImageIFD.YResolution] = (h, 1)
-    exif_bytes = piexif.dump(exif_dict)
-    compression.compression_engine(filename,exif_bytes,"")
+    try:
+        exif_dict = piexif.load(im.info["exif"])
+        w, h = im.size
+        exif_dict["0th"][piexif.ImageIFD.XResolution] = (w, 1)
+        exif_dict["0th"][piexif.ImageIFD.YResolution] = (h, 1)
+        exif_bytes = piexif.dump(exif_dict)
+        compression.compression_engine(filename,exif_bytes,"")
+    except:
+        compression.compression_engine(filename,"","")
     print("DONE. time passed : ", ((datetime.datetime.now() - start).seconds) / 60, " minutes")
 
 
