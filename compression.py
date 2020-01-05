@@ -130,6 +130,9 @@ def make_quality_compression(original,sal,imgg,original1,image_metadata,image_ty
         if image_type == "tiff":
             out_img.save(out_name, quality=qua)
 
+        elif image_metadata == "":
+            out_img.save(out_name, quality=qua)
+
         else:
             out_img.save(out_name, quality=qua,exif=image_metadata)
 
