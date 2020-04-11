@@ -1,0 +1,27 @@
+<<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head>
+        <meta charset="utf-8">
+        <title>BASE64 javascript</title>
+        <script type="text/javascript">
+            function encodeImageFile(element) {
+                var file = element.files[0];
+                var reader = new FileReader();
+                reader.onloadend = function() {
+
+                    var strimage = reader.result
+
+                    var base64 = strimage.replace(/^data:image\/[a-z]+;base64,/, "");
+                    console.log("Result",base64);
+
+                }
+                reader.readAsDataURL(file);
+                //console.log("BASE64",base64);
+
+            }
+        </script>
+    </head>
+    <body>
+        <input type='file' onchange="encodeImageFile(this)"/>
+    </body>
+</html>
