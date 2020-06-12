@@ -13,6 +13,8 @@ import matplotlib.pyplot as plt
 plt.style.use('ggplot')
 
 
+from get_metrics import get_metrics
+
 #from six.moves import xrange
 import os, sys
 #os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
@@ -129,6 +131,8 @@ def make_quality_compression(original,sal,imgg,original1):
 
         out_img.save(out_name, quality=qua)
 
+    return out_name
+
 
 
 
@@ -183,7 +187,9 @@ def compression_engine(img):
         os.makedirs('output')
     plt.savefig('output/overlayed_heatmap.png')
     skimage.io.imsave( 'msroi_map.jpg', roi_map )
+    plt.clf()
     print("MSROI TYPE : ",type(roi_map))
+    plt.close()
 
 
 
@@ -200,5 +206,5 @@ def compression_engine(img):
     #print("ORIGINAL : ",original)
     sal = Image.open('msroi_map.jpg')
 
-    make_quality_compression(original,sal,img,original)
+    out_name = make_quality_compression(original,sal,img,original)
 
