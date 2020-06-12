@@ -10,12 +10,12 @@ from ibm_botocore.client import Config, ClientError
 from webptools import webplib as webp
 
 
-COS_ENDPOINT = "https://s3.jp-tok.cloud-object-storage.appdomain.cloud" 
-COS_API_KEY_ID_DOWNLOAD = "zkT0ncxw5FhJVs0oRDkLLBujxeaAQkeK1S8kykNCNkro" 
-COS_API_KEY_ID_UPLOAD = "PsiYNRatlfODo-GWMMCkEWnki7vmiTobnKUcInWzoaIn"
+COS_ENDPOINT = "" 
+COS_API_KEY_ID_DOWNLOAD = "" 
+COS_API_KEY_ID_UPLOAD = ""
 COS_AUTH_ENDPOINT = "https://iam.cloud.ibm.com/identity/token"
-COS_RESOURCE_CRN_DOWNLOAD = "crn:v1:bluemix:public:cloud-object-storage:global:a/339e572a879642078f0f439e696cf9af:be9ee3a0-cd5f-41ef-b5d1-472f1800bb25::"
-COS_RESOURCE_CRN_UPLOAD = "crn:v1:bluemix:public:cloud-object-storage:global:a/339e572a879642078f0f439e696cf9af:be9ee3a0-cd5f-41ef-b5d1-472f1800bb25::"
+COS_RESOURCE_CRN_DOWNLOAD = ""
+COS_RESOURCE_CRN_UPLOAD = ""
 
 
 
